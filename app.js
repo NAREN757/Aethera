@@ -4,6 +4,12 @@ if (process.env.NODE_ENV !== "production") {
 
 const express = require("express");
 const app = express();
+
+// Trust Render's reverse proxy so secure session cookies work
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 const mongoose = require("mongoose");
 const path = require("path");
 const methodOverride = require("method-override");
@@ -20,25 +26,16 @@ const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
-// Aethera database
+// Database
 const dburl = process.env.ATLASDB_URL;
+const sessionSecret = process.env.SESSION_SECRET;
 
-main()
-  .then(() => {
-    console.log("Connected to Aethera database");
-    app.listen(process.env.PORT || 3000, () => {
-      console.log(
-        `Aethera server is running on port ${process.env.PORT || 3000}`,
-      );
-    });
-  })
-  .catch((err) => {
-    console.error("Database connection failed:", err);
-    process.exit(1);
-  });
+if (!dburl) {
+  throw new Error("ATLASDB_URL is missing from environment variables.");
+}
 
-async function main() {
-  await mongoose.connect(dburl);
+if (!sessionSecret) {
+  throw new Error("SESSION_SECRET is missing from environment variables.");
 }
 
 // EJS configuration
@@ -46,27 +43,28 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.engine("ejs", ejsMate);
 
-// Middleware
+// General middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 
+// MongoDB session store
 const store = MongoStore.create({
   mongoUrl: dburl,
   crypto: {
-    secret: process.env.SESSION_SECRET,
+    secret: sessionSecret,
   },
   touchAfter: 24 * 3600,
 });
 
-store.on("error", () => {
-  console.log("Error in MONGO SESSION STORE", err);
+store.on("error", (err) => {
+  console.error("Error in MongoDB session store:", err);
 });
 
 // Session configuration
 const sessionOptions = {
   store,
-  secret: process.env.SESSION_SECRET || "development-secret-change-me",
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -113,8 +111,27 @@ app.all("/{*splat}", (req, res, next) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  const { statusCode = 500 } = err;
+  console.error(err);
+
+  const statusCode = err.statusCode || 500;
   const message = statusCode === 500 ? "Something went wrong!" : err.message;
 
   res.status(statusCode).render("error.ejs", { message });
+});
+
+// Start server
+async function main() {
+  await mongoose.connect(dburl);
+  console.log("Connected to Aethera database");
+
+  const port = process.env.PORT || 3000;
+
+  app.listen(port, () => {
+    console.log(`Aethera server is running on port ${port}`);
+  });
+}
+
+main().catch((err) => {
+  console.error("Database connection failed:", err);
+  process.exit(1);
 });
