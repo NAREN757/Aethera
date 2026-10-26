@@ -20,25 +20,15 @@ const listingsRouter = require("./routes/listing.js");
 const reviewsRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 
-// Aethera database
 const dburl = process.env.ATLASDB_URL;
+const sessionSecret = process.env.SESSION_SECRET;
 
-main()
-  .then(() => {
-    console.log("Connected to Aethera database");
-    app.listen(process.env.PORT || 3000, () => {
-      console.log(
-        `Aethera server is running on port ${process.env.PORT || 3000}`,
-      );
-    });
-  })
-  .catch((err) => {
-    console.error("Database connection failed:", err);
-    process.exit(1);
-  });
+if (!dburl) {
+  throw new Error("ATLASDB_URL is missing from environment variables.");
+}
 
-async function main() {
-  await mongoose.connect(dburl);
+if (!sessionSecret) {
+  throw new Error("SESSION_SECRET is missing from environment variables.");
 }
 
 // EJS configuration
@@ -46,38 +36,68 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.engine("ejs", ejsMate);
 
-// Middleware
+// General middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "public")));
 
+// MongoDB connection reused across serverless invocations
+let dbConnectionPromise;
+
+async function connectToDatabase() {
+  if (mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  if (!dbConnectionPromise) {
+    dbConnectionPromise = mongoose.connect(dburl).catch((err) => {
+      dbConnectionPromise = null;
+      throw err;
+    });
+  }
+
+  await dbConnectionPromise;
+}
+
+// Ensure MongoDB is connected before handling sessions and routes
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// MongoDB session store
 const store = MongoStore.create({
   mongoUrl: dburl,
   crypto: {
-    secret: process.env.SESSION_SECRET,
+    secret: sessionSecret,
   },
   touchAfter: 24 * 3600,
 });
 
-store.on("error", () => {
-  console.log("Error in MONGO SESSION STORE", err);
+store.on("error", (err) => {
+  console.error("MongoDB session store error:", err);
 });
 
 // Session configuration
-const sessionOptions = {
-  store,
-  secret: process.env.SESSION_SECRET || "development-secret-change-me",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  },
-};
+app.use(
+  session({
+    store,
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    },
+  }),
+);
 
-app.use(session(sessionOptions));
 app.use(flash());
 
 // Passport configuration
@@ -113,8 +133,13 @@ app.all("/{*splat}", (req, res, next) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  const { statusCode = 500 } = err;
+  console.error(err);
+
+  const statusCode = err.statusCode || 500;
   const message = statusCode === 500 ? "Something went wrong!" : err.message;
 
   res.status(statusCode).render("error.ejs", { message });
 });
+
+// Export the Express app for Vercel
+module.exports = app;
