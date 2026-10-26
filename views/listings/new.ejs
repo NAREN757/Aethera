@@ -1,0 +1,156 @@
+<% layout("/layouts/boilerplate") -%>
+
+<div class="row">
+  <div class="col-lg-8 offset-lg-2 col-md-10 offset-md-1">
+    <div class="my-4">
+      <h3 class="allgames">List Your Property</h3>
+      <p class="text-muted">
+        Share your stay with travellers around the world.
+      </p>
+    </div>
+
+    <form method="POST" action="/listings" novalidate class="needs-validation">
+      <!-- Property Name -->
+      <div class="mb-3">
+        <label for="title" class="form-label">Property Name</label>
+        <input
+          id="title"
+          name="listing[title]"
+          placeholder="e.g. Lakefront Luxury Villa"
+          type="text"
+          class="form-control"
+          required
+        />
+        <div class="valid-feedback">Property name looks good!</div>
+        <div class="invalid-feedback">Please enter a property name.</div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-3">
+        <label for="description" class="form-label">Property Description</label>
+        <textarea
+          id="description"
+          name="listing[description]"
+          placeholder="Describe the property, amenities, and nearby attractions."
+          class="form-control"
+          rows="5"
+          required
+        ></textarea>
+        <div class="valid-feedback">Description looks good!</div>
+        <div class="invalid-feedback">Please describe the property.</div>
+      </div>
+
+      <!-- Image -->
+      <div class="mb-3">
+        <label for="image" class="form-label">Property Image URL</label>
+        <input
+          id="image"
+          name="listing[image]"
+          placeholder="https://example.com/property.jpg"
+          type="url"
+          class="form-control"
+          required
+        />
+        <div class="valid-feedback">Image URL looks good!</div>
+        <div class="invalid-feedback">Please enter a valid image URL.</div>
+      </div>
+
+      <div class="row">
+        <!-- Nightly Price -->
+        <div class="mb-3 col-md-4">
+          <label for="price" class="form-label">Price per Night (NZD)</label>
+          <input
+            id="price"
+            name="listing[price]"
+            placeholder="e.g. 250"
+            type="number"
+            min="1"
+            class="form-control"
+            required
+          />
+          <div class="valid-feedback">Price looks good!</div>
+          <div class="invalid-feedback">Enter a valid nightly price.</div>
+        </div>
+
+        <!-- Location -->
+        <div class="mb-3 col-md-4">
+          <label for="location" class="form-label">City or Location</label>
+          <input
+            id="location"
+            name="listing[location]"
+            placeholder="e.g. Queenstown"
+            type="text"
+            class="form-control"
+            required
+          />
+          <div class="valid-feedback">Location looks good!</div>
+          <div class="invalid-feedback">Please enter a location.</div>
+        </div>
+
+        <!-- Country -->
+        <div class="mb-3 col-md-4">
+          <label for="country" class="form-label">Country</label>
+          <input
+            id="country"
+            name="listing[country]"
+            placeholder="e.g. New Zealand"
+            type="text"
+            class="form-control"
+            required
+          />
+          <div class="valid-feedback">Country looks good!</div>
+          <div class="invalid-feedback">Please enter a country.</div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label for="category" class="form-label"> Property Category </label>
+
+        <select
+          id="category"
+          name="listing[category]"
+          class="form-select"
+          required
+        >
+          <option value="" selected disabled>Select a category</option>
+
+          <option value="rooms">Rooms</option>
+          <option value="mountains">Mountains</option>
+          <option value="cities">Cities</option>
+          <option value="castles">Castles</option>
+          <option value="pools">Pools</option>
+          <option value="camps">Camps</option>
+          <option value="farms">Farms</option>
+          <option value="boats">Boats</option>
+          <option value="igloos">Igloos</option>
+          <option value="trees">Trees</option>
+        </select>
+      </div>
+
+      <!-- Property Address for TomTom Geocoding -->
+      <div class="mb-3">
+        <label for="address" class="form-label">Full Property Address</label>
+        <input
+          id="address"
+          name="listing[address]"
+          type="text"
+          class="form-control"
+          placeholder="Street address, city, state, country"
+          required
+        />
+        <div class="form-text">
+          Enter the property's full address so Aethera can locate it on the map.
+        </div>
+        <div class="invalid-feedback">
+          Please enter the property's full address.
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 mt-4 mb-5">
+        <button type="submit" class="btn btn-dark add-btn">Add Property</button>
+
+        <a href="/listings" class="btn btn-outline-secondary"> Cancel </a>
+      </div>
+    </form>
+  </div>
+</div>

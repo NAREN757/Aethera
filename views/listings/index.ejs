@@ -1,0 +1,342 @@
+
+<% layout("/layouts/boilerplate") -%>
+
+<style>
+  #filters {
+    margin-top: 3rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+
+  .filter {
+    text-align: center;
+    min-width: 96px;
+    opacity: 0.7;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .filter:hover {
+    opacity: 1;
+    cursor: pointer;
+    transform: translateY(-2px);
+  }
+
+  .filter p {
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0;
+  }
+
+  .filter i {
+    font-size: 1.2rem;
+  }
+
+  .filter.active {
+    opacity: 1;
+    border-bottom: 2px solid currentColor;
+    padding-bottom: 0.5rem;
+  }
+
+  .listing-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .listing-card {
+    border: none;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .listing-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .listing-card .card-img-top {
+    width: 100%;
+    height: 240px;
+    object-fit: cover;
+    border-radius: 1rem;
+  }
+
+  .listing-card .card-body {
+    padding: 0.8rem 0.1rem;
+  }
+
+  .listing-card .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .aethera-pagination {
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+  }
+
+  .aethera-pagination .page-link {
+    color: inherit;
+  }
+
+  .aethera-pagination .page-item.active .page-link {
+    background-color: #222;
+    border-color: #222;
+    color: #fff;
+  }
+</style>
+
+<!-- Category Filters -->
+<div id="filters">
+
+  <a
+    href="/listings"
+    class="filter <%= !category ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-fire"></i></div>
+    <p>Trending</p>
+  </a>
+
+  <a
+    href="/listings?category=rooms"
+    class="filter <%= category === 'rooms' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-bed"></i></div>
+    <p>Rooms</p>
+  </a>
+
+  <a
+    href="/listings?category=mountains"
+    class="filter <%= category === 'mountains' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-mountain"></i></div>
+    <p>Mountains</p>
+  </a>
+
+  <a
+    href="/listings?category=cities"
+    class="filter <%= category === 'cities' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-city"></i></div>
+    <p>Cities</p>
+  </a>
+
+  <a
+    href="/listings?category=castles"
+    class="filter <%= category === 'castles' ? 'active' : '' %>"
+  >
+    <div><i class="fa-brands fa-fort-awesome" style="color: rgb(51, 104, 160);"></i></div>
+    <p>Castles</p>
+  </a>
+
+  <a
+    href="/listings?category=pools"
+    class="filter <%= category === 'pools' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-person-swimming"></i></div>
+    <p>Pools</p>
+  </a>
+
+  <a
+    href="/listings?category=camps"
+    class="filter <%= category === 'camps' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-campground"></i></div>
+    <p>Camps</p>
+  </a>
+
+  <a
+    href="/listings?category=farms"
+    class="filter <%= category === 'farms' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-cow"></i></div>
+    <p>Farms</p>
+  </a>
+
+  <a
+    href="/listings?category=boats"
+    class="filter <%= category === 'boats' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-ship"></i></div>
+    <p>Boats</p>
+  </a>
+
+  <a
+    href="/listings?category=igloos"
+    class="filter <%= category === 'igloos' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-igloo"></i></div>
+    <p>Igloos</p>
+  </a>
+
+  <a
+    href="/listings?category=trees"
+    class="filter <%= category === 'trees' ? 'active' : '' %>"
+  >
+    <div><i class="fa-solid fa-tree"></i></div>
+    <p>Trees</p>
+  </a>
+
+</div>
+
+<!-- Page Heading -->
+<div
+  class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-2 mt-4 mb-4"
+>
+  <div>
+    <p class="text-uppercase text-muted small fw-semibold mb-2">
+      Find your next escape
+    </p>
+
+    <h2 class="allgames mb-2">
+      <%= category
+        ? category.charAt(0).toUpperCase() + category.slice(1) + " Stays"
+        : "Discover your next stay" %>
+    </h2>
+
+    <p class="text-muted mb-0">
+      Explore unique homes and memorable places around the world.
+    </p>
+  </div>
+
+  <p class="text-muted mb-1">
+    Showing <strong><%= allListings.length %></strong>
+    of <strong><%= totalListings %></strong> stays
+  </p>
+</div>
+
+<!-- Accommodation Cards -->
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+
+  <% for (let listing of allListings) { %>
+    <div class="col">
+      <a href="/listings/<%= listing._id %>" class="listing-link">
+        <div class="card listing-card h-100">
+
+          <img
+            src="<%= listing.image %>"
+            class="card-img-top"
+            alt="<%= listing.title %>"
+            loading="lazy"
+          >
+
+          <div class="card-img-overlay"></div>
+
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <h5 class="card-title mb-1">
+                <%= listing.title %>
+              </h5>
+
+              <span class="text-muted small flex-shrink-0">
+                <i class="fa-solid fa-location-dot"></i>
+              </span>
+            </div>
+
+            <p class="text-muted mb-2">
+              <%= listing.location %><% if (listing.country) { %>, <%= listing.country %><% } %>
+            </p>
+
+            <p class="card-text mb-0">
+              <strong>
+                <%= Number(listing.price).toLocaleString("en-IN", {
+                  style: "currency",
+                  currency: "INR",
+                  maximumFractionDigits: 0
+                }) %>
+              </strong>
+              <span class="text-muted">per night</span>
+            </p>
+          </div>
+
+        </div>
+      </a>
+    </div>
+  <% } %>
+
+</div>
+
+<!-- Empty State -->
+<% if (allListings.length === 0) { %>
+  <div class="text-center py-5">
+    <i class="fa-solid fa-house fa-2x mb-3"></i>
+
+    <h4>
+      <%= category
+        ? "No " + category + " stays available yet"
+        : "No stays available yet" %>
+    </h4>
+
+    <p class="text-muted">
+      Check back soon or add the first property to Aethera.
+    </p>
+
+    <% if (category) { %>
+      <a href="/listings" class="btn btn-outline-dark mt-2">
+        View all stays
+      </a>
+    <% } %>
+  </div>
+<% } %>
+
+<!-- Pagination -->
+<% if (totalPages > 1) { %>
+  <nav
+    class="aethera-pagination"
+    aria-label="Accommodation pages"
+  >
+    <ul class="pagination justify-content-center align-items-center flex-wrap">
+
+      <!-- Previous Page -->
+      <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+        <% if (currentPage > 1) { %>
+          <a
+            class="page-link"
+            href="/listings?page=<%= currentPage - 1 %><%= category ? '&category=' + encodeURIComponent(category) : '' %>"
+            aria-label="Previous page"
+          >
+            &laquo; Previous
+          </a>
+        <% } else { %>
+          <span class="page-link">&laquo; Previous</span>
+        <% } %>
+      </li>
+
+      <!-- Page Numbers -->
+      <% for (let i = 1; i <= totalPages; i++) { %>
+        <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+          <a
+            class="page-link"
+            href="/listings?page=<%= i %><%= category ? '&category=' + encodeURIComponent(category) : '' %>"
+            <%= currentPage === i ? 'aria-current="page"' : '' %>
+          >
+            <%= i %>
+          </a>
+        </li>
+      <% } %>
+
+      <!-- Next Page -->
+      <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+        <% if (currentPage < totalPages) { %>
+          <a
+            class="page-link"
+            href="/listings?page=<%= currentPage + 1 %><%= category ? '&category=' + encodeURIComponent(category) : '' %>"
+            aria-label="Next page"
+          >
+            Next &raquo;
+          </a>
+        <% } else { %>
+          <span class="page-link">Next &raquo;</span>
+        <% } %>
+      </li>
+
+    </ul>
+
+    <p class="text-muted text-center small mt-3 mb-0">
+      Page <%= currentPage %> of <%= totalPages %>
+    </p>
+  </nav>
+<% } %>
